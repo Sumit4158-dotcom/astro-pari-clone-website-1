@@ -145,10 +145,10 @@ export const Header = () => {
                 <Globe className="h-4 w-4" />
                 Eng
               </button>
-              <button className="flex items-center gap-2 bg-black hover:bg-gray-900 text-white font-semibold px-6 py-2 rounded-full transition-all">
+              <Link href="/admin/login" className="flex items-center gap-2 bg-black hover:bg-gray-900 text-white font-semibold px-6 py-2 rounded-full transition-all">
                 <Shield className="h-4 w-4" />
                 Admin
-              </button>
+              </Link>
               
               {/* User Section */}
               {!isPending && session?.user ? (
@@ -291,9 +291,9 @@ export const Header = () => {
                   Login
                 </Link>
               )}
-              <button className="bg-black hover:bg-gray-900 text-white font-semibold px-4 py-2 rounded-full transition-all text-sm">
+              <Link href="/admin/login" className="bg-black hover:bg-gray-900 text-white font-semibold px-4 py-2 rounded-full transition-all text-sm">
                 Admin
-              </button>
+              </Link>
               <button 
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2"
