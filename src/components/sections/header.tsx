@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   ChevronDown, 
   Globe, 
@@ -15,13 +16,19 @@ import {
   Sparkles,
   Eye,
   Calculator,
-  Shield
+  Shield,
+  LogOut
 } from "lucide-react";
+import { authClient, useSession } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export const Header = () => {
+  const router = useRouter();
+  const { data: session, isPending, refetch } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpenSection, setMobileOpenSection] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const toggleDropdown = (dropdown: string) => {
     setOpenDropdown(openDropdown === dropdown ? null : dropdown);
@@ -29,6 +36,19 @@ export const Header = () => {
 
   const toggleMobileSection = (section: string) => {
     setMobileOpenSection(mobileOpenSection === section ? null : section);
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await authClient.signOut();
+    if (error?.code) {
+      toast.error("Failed to logout. Please try again.");
+    } else {
+      localStorage.removeItem("bearer_token");
+      refetch();
+      toast.success("Logged out successfully!");
+      router.push("/");
+    }
+    setShowUserMenu(false);
   };
 
   return (
@@ -129,10 +149,41 @@ export const Header = () => {
                 <Shield className="h-4 w-4" />
                 Admin
               </button>
-              <button className="flex items-center gap-2 bg-[#FFD700] hover:bg-[#FFED4E] text-black font-semibold px-6 py-2 rounded-full transition-all">
-                <User className="h-4 w-4" />
-                Login
-              </button>
+              
+              {/* User Section */}
+              {!isPending && session?.user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 bg-[#FFD700] hover:bg-[#FFED4E] text-black font-semibold px-6 py-2 rounded-full transition-all"
+                  >
+                    <User className="h-4 w-4" />
+                    {session.user.name}
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-border py-2">
+                      <div className="px-4 py-2 border-b border-border">
+                        <p className="text-sm font-semibold text-black truncate">{session.user.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+                      </div>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/login" className="flex items-center gap-2 bg-[#FFD700] hover:bg-[#FFED4E] text-black font-semibold px-6 py-2 rounded-full transition-all">
+                  <User className="h-4 w-4" />
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -209,6 +260,37 @@ export const Header = () => {
             </Link>
             
             <div className="flex items-center gap-3">
+              {!isPending && session?.user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="bg-[#FFD700] hover:bg-[#FFED4E] text-black font-semibold px-4 py-2 rounded-full transition-all text-sm flex items-center gap-1"
+                  >
+                    {session.user.name.split(' ')[0]}
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-border py-2 z-50">
+                      <div className="px-4 py-2 border-b border-border">
+                        <p className="text-sm font-semibold text-black truncate">{session.user.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+                      </div>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/login" className="bg-[#FFD700] hover:bg-[#FFED4E] text-black font-semibold px-4 py-2 rounded-full transition-all text-sm">
+                  Login
+                </Link>
+              )}
               <button className="bg-black hover:bg-gray-900 text-white font-semibold px-4 py-2 rounded-full transition-all text-sm">
                 Admin
               </button>
@@ -245,6 +327,21 @@ export const Header = () => {
               </div>
 
               <nav className="px-4 py-4 space-y-1">
+                {/* User Info (if logged in) */}
+                {!isPending && session?.user && (
+                  <div className="mb-4 p-4 bg-[#FFD700]/10 rounded-lg">
+                    <p className="text-sm font-semibold text-black">{session.user.name}</p>
+                    <p className="text-xs text-gray-600 truncate">{session.user.email}</p>
+                    <button
+                      onClick={handleSignOut}
+                      className="mt-2 flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+
                 {/* Language Selector */}
                 <div className="mb-4">
                   <div className="flex items-center gap-2 text-sm text-blue-500 mb-2">
